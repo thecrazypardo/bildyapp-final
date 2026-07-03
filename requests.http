@@ -1,0 +1,253 @@
+@baseUrl = http://localhost:3000/api/user
+@accessToken = PON_AQUI_EL_ACCESS_TOKEN
+@refreshToken = PON_AQUI_EL_REFRESH_TOKEN
+
+### 1) Registro de usuario
+POST {{baseUrl}}/register
+Content-Type: application/json
+
+{
+  "email": "ana@example.com",
+  "password": "password123"
+}
+
+### 2) Validación del email
+PUT {{baseUrl}}/validation
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "code": "123456"
+}
+
+### 3) Login
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "ana@example.com",
+  "password": "password123"
+}
+
+### 4a) Onboarding — datos personales
+PUT {{baseUrl}}/register
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "name": "Ana",
+  "lastName": "García Pérez",
+  "nif": "12345678Z"
+}
+
+### 4b) Onboarding — compañía (empresa normal)
+PATCH {{baseUrl}}/company
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "isFreelance": false,
+  "name": "Acme Corp",
+  "cif": "B12345678",
+  "address": {
+    "street": "Calle Mayor",
+    "number": "1",
+    "postal": "28001",
+    "city": "Madrid",
+    "province": "Madrid"
+  }
+}
+
+### 4b bis) Onboarding — compañía (autónomo)
+PATCH {{baseUrl}}/company
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "isFreelance": true
+}
+
+### 5) Logo de la compañía (multipart/form-data)
+PATCH {{baseUrl}}/logo
+Authorization: Bearer {{accessToken}}
+Content-Type: multipart/form-data; boundary=BOUNDARY
+
+--BOUNDARY
+Content-Disposition: form-data; name="logo"; filename="logo.png"
+Content-Type: image/png
+
+< ./logo.png
+--BOUNDARY--
+
+### 6) Obtener usuario autenticado
+GET {{baseUrl}}
+Authorization: Bearer {{accessToken}}
+
+### 7a) Refrescar access token
+POST {{baseUrl}}/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+### 7b) Logout
+POST {{baseUrl}}/logout
+Authorization: Bearer {{accessToken}}
+
+### 8) Eliminar usuario (soft delete)
+DELETE {{baseUrl}}?soft=true
+Authorization: Bearer {{accessToken}}
+
+### 8 bis) Eliminar usuario (hard delete)
+DELETE {{baseUrl}}
+Authorization: Bearer {{accessToken}}
+
+### 9) Cambiar contraseña
+PUT {{baseUrl}}/password
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "currentPassword": "password123",
+  "newPassword": "newPassword456"
+}
+
+### 10) Invitar compañero
+POST {{baseUrl}}/invite
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "email": "invitado@example.com",
+  "name": "Luis",
+  "lastName": "Martínez"
+}
+
+### ============================
+### CLIENTES
+### ============================
+
+### Crear cliente
+POST http://localhost:3000/api/client
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "name": "Cliente S.L.",
+  "cif": "B99999999",
+  "email": "contacto@cliente.com",
+  "phone": "600111222",
+  "address": { "street": "Calle Falsa", "number": "123", "postal": "28002", "city": "Madrid", "province": "Madrid" }
+}
+
+### Listar clientes (con paginación y búsqueda)
+GET http://localhost:3000/api/client?page=1&limit=10&name=Cliente
+Authorization: Bearer {{accessToken}}
+
+### Obtener un cliente
+GET http://localhost:3000/api/client/ID_DEL_CLIENTE
+Authorization: Bearer {{accessToken}}
+
+### Actualizar un cliente
+PUT http://localhost:3000/api/client/ID_DEL_CLIENTE
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{ "phone": "600999888" }
+
+### Archivar un cliente (soft delete)
+DELETE http://localhost:3000/api/client/ID_DEL_CLIENTE?soft=true
+Authorization: Bearer {{accessToken}}
+
+### Listar clientes archivados
+GET http://localhost:3000/api/client/archived
+Authorization: Bearer {{accessToken}}
+
+### Restaurar un cliente archivado
+PATCH http://localhost:3000/api/client/ID_DEL_CLIENTE/restore
+Authorization: Bearer {{accessToken}}
+
+### ============================
+### PROYECTOS
+### ============================
+
+### Crear proyecto
+POST http://localhost:3000/api/project
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "name": "Reforma de oficina",
+  "projectCode": "PRJ-001",
+  "client": "ID_DEL_CLIENTE",
+  "notes": "Reforma integral de la planta baja"
+}
+
+### Listar proyectos (filtro por cliente)
+GET http://localhost:3000/api/project?client=ID_DEL_CLIENTE&active=true
+Authorization: Bearer {{accessToken}}
+
+### Obtener un proyecto (con cliente populado)
+GET http://localhost:3000/api/project/ID_DEL_PROYECTO
+Authorization: Bearer {{accessToken}}
+
+### Archivar un proyecto
+DELETE http://localhost:3000/api/project/ID_DEL_PROYECTO?soft=true
+Authorization: Bearer {{accessToken}}
+
+### ============================
+### ALBARANES
+### ============================
+
+### Crear albarán de materiales
+POST http://localhost:3000/api/deliverynote
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "format": "material",
+  "client": "ID_DEL_CLIENTE",
+  "project": "ID_DEL_PROYECTO",
+  "workDate": "2026-06-01",
+  "material": "Cemento",
+  "quantity": 10,
+  "unit": "sacos"
+}
+
+### Crear albarán de horas
+POST http://localhost:3000/api/deliverynote
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "format": "hours",
+  "client": "ID_DEL_CLIENTE",
+  "project": "ID_DEL_PROYECTO",
+  "workDate": "2026-06-02",
+  "workers": [{ "name": "Luis", "hours": 8 }]
+}
+
+### Listar albaranes (con filtros)
+GET http://localhost:3000/api/deliverynote?project=ID_DEL_PROYECTO&signed=false
+Authorization: Bearer {{accessToken}}
+
+### Descargar PDF de un albarán
+GET http://localhost:3000/api/deliverynote/pdf/ID_DEL_ALBARAN
+Authorization: Bearer {{accessToken}}
+
+### Firmar un albarán (multipart/form-data)
+PATCH http://localhost:3000/api/deliverynote/ID_DEL_ALBARAN/sign
+Authorization: Bearer {{accessToken}}
+Content-Type: multipart/form-data; boundary=BOUNDARY
+
+--BOUNDARY
+Content-Disposition: form-data; name="signature"; filename="signature.png"
+Content-Type: image/png
+
+< ./signature.png
+--BOUNDARY--
+
+### Borrar un albarán (solo si no está firmado)
+DELETE http://localhost:3000/api/deliverynote/ID_DEL_ALBARAN
+Authorization: Bearer {{accessToken}}
